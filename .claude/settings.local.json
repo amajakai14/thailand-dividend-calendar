@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/means/repository/th-div-calendar/src)",
+      "Bash(rtk ls *)",
+      "Bash(npm install *)",
+      "Bash(rtk playwright *)",
+      "Bash(rtk proxy *)",
+      "Bash(node *)",
+      "Bash(rtk npm *)",
+      "Bash(sqlite3 /Users/means/repository/th-div-calendar/data/dividends.db \"SELECT ticker, xd_date, pay_date, cash_per_share FROM dividends LIMIT 10;\")",
+      "Bash(sqlite3 /Users/means/repository/th-div-calendar/data/dividends.db \"SELECT COUNT\\(*\\) as total FROM dividends;\")",
+      "Bash(rtk read *)",
+      "Bash(rtk grep *)",
+      "Bash(sqlite3 *)",
+      "Bash(npm *)",
+      "Bash(rtk git *)",
+      "Bash(git init *)"
+    ]
+  }
+}

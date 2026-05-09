@@ -1,0 +1,21 @@
+{
+  "name": "th-div-calendar",
+  "version": "1.0.0",
+  "scripts": {
+    "scrape": "ts-node src/main.ts",
+    "schedule": "ts-node src/schedule.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "node-cron": "^3.0.3",
+    "playwright": "^1.44.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/node": "^20.0.0",
+    "@types/node-cron": "^3.0.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0"
+  }
+}
