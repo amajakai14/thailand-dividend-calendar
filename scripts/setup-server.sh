@@ -17,7 +17,11 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt install -y nodejs
 
 echo "==> Cloning repository..."
-git clone "$REPO" "$APP_DIR"
+if [ -d "$APP_DIR/.git" ]; then
+  echo "   Repo already exists at $APP_DIR — skipping clone."
+else
+  git clone "$REPO" "$APP_DIR"
+fi
 cd "$APP_DIR"
 
 echo "==> Installing npm dependencies..."
