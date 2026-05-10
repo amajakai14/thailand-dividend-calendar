@@ -1,0 +1,16 @@
+[Unit]
+Description=TH Dividend Calendar — Express Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/th-div-calendar
+EnvironmentFile=/opt/th-div-calendar/.env
+ExecStart=/opt/th-div-calendar/node_modules/.bin/ts-node -P server/tsconfig.json server/src/app.ts
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

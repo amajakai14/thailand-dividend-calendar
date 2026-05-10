@@ -1,0 +1,11 @@
+[Unit]
+Description=TH Dividend Calendar — Scraper Timer
+Requires=th-div-scraper.service
+
+[Timer]
+# 07:00 Bangkok (UTC+7) = 00:00 UTC
+OnCalendar=*-*-* 00:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

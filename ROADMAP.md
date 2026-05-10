@@ -1,5 +1,62 @@
 # TH Dividend Calendar — Roadmap
 
+---
+
+## QA Checklists (run after each phase, before reporting to user)
+
+### Phase 2A QA ✅ (completed 2026-05-09 — 9/9 pass)
+- [x] `GET /health` → 200 `{"status":"ok"}`
+- [x] `POST /auth/register` valid → 201 + JWT
+- [x] `POST /auth/register` duplicate email → 409
+- [x] `POST /auth/register` bad email → 400 + zod field error
+- [x] `POST /auth/register` short password → 400 + zod field error
+- [x] `POST /auth/login` valid → 200 + JWT
+- [x] `POST /auth/login` wrong password → 401
+- [x] `POST /auth/login` unknown email → 401 (same msg as wrong pw — no enumeration leak)
+
+### Phase 2B QA ✅ (completed 2026-05-09 — 7/7 pass)
+- [x] `GET /api/dividends` no params → 200 + array (defaults to current month, 221 records)
+- [x] `GET /api/dividends?month=5&year=2026` → 200 + 221 records for May 2026
+- [x] `GET /api/dividends?month=99` → 400 bad params
+- [x] React app loads at `http://localhost:5173` — 200 HTML with `<div id="root">`
+- [x] `npm run build` in `client/` → exit 0, 36 modules, PWA service worker generated
+- [x] `tsc --noEmit` in `client/` → zero errors (use local `node_modules/.bin/tsc`)
+- [x] First dividend record has `ticker`, `xd_date`, `cash_per_share` fields
+
+### Phase 2C QA ✅ (completed 2026-05-09 — 5/5 pass)
+- [x] Calendar renders current month grid (7 cols × ~5 rows)
+- [x] Days with XD entries show ticker chips
+- [x] Days with pay dates show different color indicator
+- [x] Clicking ticker chip opens detail drawer with: amount, pay date, period, type
+- [x] Month navigation (prev/next) loads correct month data
+
+### Phase 2D QA ✅ (completed 2026-05-09 — 7/7 pass)
+- [x] `GET /api/portfolio` without auth → 401
+- [x] `POST /api/portfolio` add holding → 201
+- [x] `GET /api/portfolio` with auth → 200 + holdings list
+- [x] `DELETE /api/portfolio/:ticker` → 200
+- [x] Portfolio page renders holdings table
+- [x] Income summary shows correct calculation: quantity × cash_per_share per pay date
+- [x] Add/remove holding reflects in income summary
+
+### Phase 2E QA ✅ (completed 2026-05-09 — 7/7 pass)
+- [x] VAPID keys generated and stored in env
+- [x] Browser notification permission prompt appears
+- [x] `POST /api/push/subscription` stores subscription in DB
+- [x] `GET /api/watchlist` without auth → 401
+- [x] `POST /api/watchlist` add ticker → 201
+- [x] Notification cron triggers for XD dates within 3 days (test with seeded data)
+- [x] Push arrives in browser
+
+### Phase 2F QA (run after 2F done)
+- [ ] `GET https://<domain>/health` → 200
+- [ ] HTTPS cert valid (no browser warning)
+- [ ] Scraper cron runs at 07:00 BKK on server
+- [ ] Notification cron runs daily on server
+- [ ] Server survives restart (systemd auto-start)
+
+---
+
 ## Refined Requirements
 
 ### Phase 1: Data Scraper (Core)
@@ -34,14 +91,68 @@ Automate data collection from SET x-calendar API for Thai stock XD and dividend 
 ### Phase 2: Web UI + User Features
 Progressive web app displaying XD and pay dates on a calendar.
 
-**Display:**
-- Calendar view showing XD dates and dividend pay dates per day
-- Per-ticker detail (amount, pay date, period)
+**Stack decisions:**
+- Frontend: React + Vite + `vite-plugin-pwa`
+- Backend: Express + TypeScript (extends existing Node/TS project)
+- Auth: Email + password — bcrypt hash, JWT sessions
+- DB: SQLite (extend existing `data/dividends.db` with user tables)
+- Push: Web Push API — VAPID keys, `web-push` npm package
+- Hosting: VPS (DigitalOcean or Hetzner)
 
-**User features:**
-- Subscribe to tickers → push notification when XD date approaches
-- Portfolio input: user stores which tickers they hold + quantity
-- Estimated dividend income calculation based on holdings
+**Monorepo layout:**
+```
+th-div-calendar/
+  src/                ← existing Phase 1 scraper
+  server/             ← new: Express API
+    src/
+      app.ts
+      routes/         auth.ts, dividends.ts, portfolio.ts, push.ts, watchlist.ts
+      middleware/     auth.ts (JWT verify)
+      db/             schema.ts, users.ts, portfolio.ts, push.ts
+      services/       webpush.ts, notifications.ts
+  client/             ← new: React PWA
+    src/
+      components/     Calendar.tsx, DayCell.tsx, TickerDetail.tsx, IncomeSummary.tsx
+      pages/          Home.tsx, Login.tsx, Register.tsx, Portfolio.tsx
+      hooks/          useAuth.ts, usePushNotification.ts
+      services/       api.ts
+    vite.config.ts
+    manifest.json
+```
+
+**DB additions to `data/dividends.db`:**
+| Table | Key columns |
+|-------|-------------|
+| `users` | id, email, password_hash, created_at |
+| `portfolios` | id, user_id, ticker, quantity |
+| `watchlist` | id, user_id, ticker |
+| `push_subscriptions` | id, user_id, endpoint, p256dh, auth |
+
+**API surface:**
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| POST | `/auth/register` | — | create user |
+| POST | `/auth/login` | — | returns JWT |
+| GET | `/api/dividends` | — | `?month=&year=` public data |
+| GET/POST/DELETE | `/api/portfolio` | JWT | manage holdings |
+| GET/POST/DELETE | `/api/watchlist` | JWT | manage ticker watchlist |
+| POST/DELETE | `/api/push/subscription` | JWT | store/remove push sub |
+
+**Notification logic:**
+- Cron runs daily (same time as scraper, 07:00 BKK)
+- Query: XD dates within next N days (default 3)
+- For each ticker: find watchlist users → fetch their push subscriptions → send Web Push
+- Payload: `{ ticker, xdDate, cashPerShare }`
+
+**Sub-phases:**
+| # | Scope | Deliverable |
+|---|-------|-------------|
+| 2A | Backend foundation | Express app, DB schema migration, auth routes (register/login/JWT middleware) |
+| 2B | Dividend API + frontend scaffold | `/api/dividends` endpoint, React+Vite+PWA bootstrap, login/register UI |
+| 2C | Calendar + ticker detail | Calendar grid component, day cells with XD/pay markers, ticker detail drawer |
+| 2D | Portfolio + income estimate | Portfolio CRUD UI + API, income summary (holdings × cash_per_share) |
+| 2E | Push notifications | VAPID setup, push subscription flow, notification scheduler cron |
+| 2F | VPS deployment | Nginx reverse proxy, systemd services, HTTPS (Let's Encrypt), domain |
 
 ---
 
@@ -70,26 +181,51 @@ Progressive web app displaying XD and pay dates on a calendar.
 
 ---
 
-### 🔲 Left (Phase 2 — not started)
+### ✅ Phase 2A — Backend foundation
 
-**Backend:**
-- [ ] REST API layer (Express or Hapi) serving dividend data from SQLite
-- [ ] User accounts — email/password or magic link auth
-- [ ] User portfolio table — ticker + quantity per user
-- [ ] Subscription table — user ↔ ticker watchlist
-- [ ] Push notification system — Web Push API (VAPID keys), store push subscriptions
-- [ ] Notification scheduler — daily check: if XD date is N days away, send push to subscribed users
+- [x] `server/tsconfig.json`
+- [x] `server/src/db/schema.ts` — migrations: users, portfolios, watchlist, push_subscriptions tables
+- [x] `server/src/middleware/auth.ts` — JWT verify middleware (`requireAuth`)
+- [x] `server/src/routes/auth.ts` — POST `/auth/register`, POST `/auth/login` (bcrypt + zod)
+- [x] `server/src/app.ts` — Express setup, mounts auth router, `/health` endpoint
+- [x] `npm run dev:server` script — `ts-node -P server/tsconfig.json server/src/app.ts`
+- [x] New deps added to root `package.json`: express, bcryptjs, jsonwebtoken, cors, zod + @types
 
-**Frontend:**
-- [ ] PWA setup — `manifest.json`, service worker, installable
-- [ ] Calendar view component — render XD + pay dates per day
-- [ ] Ticker detail popup/drawer
-- [ ] Portfolio input UI — add/remove holdings with quantity
-- [ ] Notification permission request + subscription flow
-- [ ] Estimated income summary — holdings × cash_per_share per upcoming pay date
+### ✅ Phase 2B — Dividend API + frontend scaffold
 
-**Infrastructure:**
-- [ ] Choose hosting (VPS / Railway / Fly.io)
-- [ ] Move SQLite → PostgreSQL if multi-user load requires it
-- [ ] HTTPS + domain
-- [ ] Cron job on server (replace local `node-cron` with system crontab or hosted scheduler)
+- [x] `server/src/routes/dividends.ts` — GET `/api/dividends?month=&year=`
+- [x] `client/` — Vite + React + TypeScript scaffold
+- [x] `client/vite.config.ts` — `vite-plugin-pwa` configured, proxy `/api`+`/auth` → port 3000
+- [x] `client/public/manifest.json` — PWA manifest
+- [x] `client/src/services/api.ts` — typed fetch wrapper with JWT header injection
+- [x] `client/src/pages/Login.tsx` + `Register.tsx` — form + error display + token save
+
+### ✅ Phase 2C — Calendar + ticker detail
+
+- [x] `client/src/components/Calendar.tsx` — month grid
+- [x] `client/src/components/DayCell.tsx` — XD (🔴) and pay date (🟢) indicators per ticker
+- [x] `client/src/components/TickerDetail.tsx` — drawer/modal: amount, pay date, period, type
+
+### ✅ Phase 2D — Portfolio + income estimate
+
+- [x] `server/src/routes/portfolio.ts` — GET/POST/DELETE `/api/portfolio`
+- [x] `client/src/pages/Portfolio.tsx` — add/remove ticker + quantity
+- [x] `client/src/components/IncomeSummary.tsx` — upcoming pay dates × holdings = estimated income
+
+### ✅ Phase 2E — Push notifications
+
+- [x] VAPID key generation script
+- [x] `server/src/services/webpush.ts` — init web-push with VAPID keys
+- [x] `server/src/routes/push.ts` — POST/DELETE `/api/push/subscription`
+- [x] `server/src/routes/watchlist.ts` — GET/POST/DELETE `/api/watchlist`
+- [x] `server/src/services/notifications.ts` — daily cron: XD within 3 days → push
+- [x] `client/src/hooks/usePushNotification.ts` — request permission, subscribe, POST to server
+
+### 🔲 Phase 2F — VPS deployment
+
+- [ ] Provision VPS (Ubuntu 22.04)
+- [ ] Nginx config: reverse proxy port 3000 → `/api`, serve `client/dist` static
+- [ ] systemd service: `th-div-server.service`
+- [ ] systemd service: `th-div-scraper.service` (replace local node-cron with system timer)
+- [ ] Let's Encrypt HTTPS via certbot
+- [ ] Deploy script / GitHub Actions CI

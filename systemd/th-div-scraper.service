@@ -1,0 +1,11 @@
+[Unit]
+Description=TH Dividend Calendar — Scraper (one-shot)
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/th-div-calendar
+EnvironmentFile=/opt/th-div-calendar/.env
+ExecStart=/opt/th-div-calendar/node_modules/.bin/ts-node src/main.ts
+StandardOutput=journal
+StandardError=journal
