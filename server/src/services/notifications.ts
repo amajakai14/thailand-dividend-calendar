@@ -2,6 +2,31 @@ import cron from 'node-cron';
 import { getDB } from '../db/schema';
 import { webpush } from './webpush';
 
+function deleteStaleSubscription(endpoint: string): void {
+  getDB().prepare(`DELETE FROM push_subscriptions WHERE endpoint = ?`).run(endpoint);
+  console.warn('[notifications] removed stale subscription:', endpoint.slice(0, 60));
+}
+
+async function sendOrPrune(
+  sub: { endpoint: string; p256dh: string; auth: string },
+  payload: string,
+  context: string
+): Promise<void> {
+  try {
+    await webpush.sendNotification(
+      { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+      payload
+    );
+  } catch (err) {
+    const e = err as { statusCode?: number };
+    if (e.statusCode === 410 || e.statusCode === 404) {
+      deleteStaleSubscription(sub.endpoint);
+    } else {
+      console.error(`[notifications] push failed ${context}:`, err);
+    }
+  }
+}
+
 export async function testNotification(userId: number): Promise<void> {
   const db = getDB();
   const subs = db.prepare(
@@ -9,19 +34,11 @@ export async function testNotification(userId: number): Promise<void> {
   ).all(userId) as Array<{ endpoint: string; p256dh: string; auth: string }>;
 
   for (const sub of subs) {
-    try {
-      await webpush.sendNotification(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        JSON.stringify({ message: 'this is Welcome to Div Application' })
-      );
-    } catch (err) {
-      console.error('[notifications] test push failed:', err);
-    }
+    await sendOrPrune(sub, JSON.stringify({ message: 'Welcome to TH Div Calendar' }), `test user=${userId}`);
   }
 }
 
 export function startNotificationCron(): void {
-  // 07:00 Bangkok time daily
   cron.schedule('0 7 * * *', () => { void sendXDNotifications(); }, { timezone: 'Asia/Bangkok' });
   console.log('[notifications] cron scheduled at 07:00 Bangkok time');
 }
@@ -46,14 +63,11 @@ export async function sendXDNotifications(): Promise<void> {
       ).all(user_id) as Array<{ endpoint: string; p256dh: string; auth: string }>;
 
       for (const sub of subs) {
-        try {
-          await webpush.sendNotification(
-            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            JSON.stringify({ ticker: div.ticker, xdDate: div.xd_date, cashPerShare: div.cash_per_share })
-          );
-        } catch (err) {
-          console.error(`[notifications] push failed for ${div.ticker} user ${user_id}:`, err);
-        }
+        await sendOrPrune(
+          sub,
+          JSON.stringify({ ticker: div.ticker, xdDate: div.xd_date, cashPerShare: div.cash_per_share }),
+          `${div.ticker} user=${user_id}`
+        );
       }
     }
   }

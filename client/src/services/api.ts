@@ -31,7 +31,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 export const api = {
   post: <T>(path: string, body: unknown) => request<T>('POST', path, body),
   get: <T>(path: string) => request<T>('GET', path),
-  delete: <T>(path: string) => request<T>('DELETE', path),
+  delete: <T>(path: string, body?: unknown) => request<T>('DELETE', path, body),
 };
 
 export function saveToken(token: string): void {

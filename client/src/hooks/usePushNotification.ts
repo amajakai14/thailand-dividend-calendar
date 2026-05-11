@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -21,26 +21,28 @@ export function usePushNotification() {
     'serviceWorker' in navigator &&
     'PushManager' in window;
 
+  useEffect(() => {
+    if (!isSupported) return;
+    navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => setEnabled(!!sub))
+      .catch(() => { /* SW not ready yet */ });
+  }, [isSupported]);
+
   async function enable(): Promise<void> {
     if (!isSupported) { setError('Push notifications not supported in this browser.'); return; }
     setLoading(true);
     setError(null);
     try {
-      console.log('[push] starting enable...');
       const { publicKey } = await api.get<{ publicKey: string }>('/api/push/public-key');
-      console.log('[push] got publicKey:', publicKey ? 'yes' : 'no');
       if (!publicKey) throw new Error('Server push not configured');
       const permission = await Notification.requestPermission();
-      console.log('[push] permission:', permission);
       if (permission !== 'granted') throw new Error('Notification permission denied');
-      console.log('[push] waiting for SW...');
       const reg = await navigator.serviceWorker.ready;
-      console.log('[push] SW ready, subscribing...');
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as ArrayBuffer,
       });
-      console.log('[push] subscribed:', sub.endpoint.slice(0, 50));
       const json = sub.toJSON();
       const keys = json.keys as Record<string, string> | undefined;
       await api.post('/api/push/subscription', {
@@ -48,12 +50,9 @@ export function usePushNotification() {
         p256dh: keys?.p256dh ?? '',
         auth: keys?.auth ?? '',
       });
-      console.log('[push] subscription posted to server');
       setEnabled(true);
     } catch (err) {
-      const msg = (err as Error).message;
-      console.error('[push] error:', msg);
-      setError(msg);
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -65,8 +64,11 @@ export function usePushNotification() {
     try {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
-      if (sub) await sub.unsubscribe();
-      await api.delete('/api/push/subscription');
+      if (sub) {
+        const endpoint = sub.endpoint;
+        await sub.unsubscribe();
+        await api.delete('/api/push/subscription', { endpoint });
+      }
       setEnabled(false);
     } catch (err) {
       setError((err as Error).message);
