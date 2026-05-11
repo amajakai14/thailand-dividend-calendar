@@ -17,25 +17,61 @@ async function sendOrPrune(
       { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
       payload
     );
+    console.log(`[notifications] push sent ${context} endpoint=${sub.endpoint.slice(0, 60)}`);
   } catch (err) {
-    const e = err as { statusCode?: number };
+    const e = err as { statusCode?: number; body?: unknown; headers?: unknown; message?: string };
+    console.error(`[notifications] push FAILED ${context}`, JSON.stringify({
+      statusCode: e.statusCode,
+      message: e.message,
+      body: e.body,
+      headers: e.headers,
+      endpoint: sub.endpoint.slice(0, 80),
+    }));
     if (e.statusCode === 410 || e.statusCode === 404) {
       deleteStaleSubscription(sub.endpoint);
-    } else {
-      console.error(`[notifications] push failed ${context}:`, err);
     }
   }
 }
 
-export async function testNotification(userId: number): Promise<void> {
+export async function testNotificationWithResult(
+  userId: number
+): Promise<Array<{ endpoint: string; ok: boolean; error?: string; statusCode?: number; body?: unknown }>> {
   const db = getDB();
   const subs = db.prepare(
     `SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?`
   ).all(userId) as Array<{ endpoint: string; p256dh: string; auth: string }>;
 
+  const results = [];
   for (const sub of subs) {
-    await sendOrPrune(sub, JSON.stringify({ message: 'Welcome to TH Div Calendar' }), `test user=${userId}`);
+    try {
+      await webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        JSON.stringify({ message: 'Welcome to TH Div Calendar' })
+      );
+      console.log(`[notifications] test push sent user=${userId} endpoint=${sub.endpoint.slice(0, 60)}`);
+      results.push({ endpoint: sub.endpoint.slice(0, 60), ok: true });
+    } catch (err) {
+      const e = err as { statusCode?: number; body?: unknown; headers?: unknown; message?: string };
+      console.error(`[notifications] test push FAILED user=${userId}`, JSON.stringify({
+        statusCode: e.statusCode,
+        message: e.message,
+        body: e.body,
+        headers: e.headers,
+        endpoint: sub.endpoint.slice(0, 80),
+      }));
+      if (e.statusCode === 410 || e.statusCode === 404) {
+        deleteStaleSubscription(sub.endpoint);
+      }
+      results.push({
+        endpoint: sub.endpoint.slice(0, 60),
+        ok: false,
+        error: e.message,
+        statusCode: e.statusCode,
+        body: e.body,
+      });
+    }
   }
+  return results;
 }
 
 export function startNotificationCron(): void {
