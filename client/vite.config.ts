@@ -26,8 +26,10 @@ export default defineConfig({
     }),
   ],
   server: {
-    allowedHosts: ['7964-2405-9800-b661-61ac-68f7-1f2b-34eb-98b3.ngrok-free.app'],
-    hmr: { protocol: 'https', host: '7964-2405-9800-b661-61ac-68f7-1f2b-34eb-98b3.ngrok-free.app', port: 443 },
+    ...(process.env.NGROK_HOST && {
+      allowedHosts: [process.env.NGROK_HOST],
+      hmr: { protocol: 'wss', host: process.env.NGROK_HOST, port: 443 },
+    }),
     proxy: {
       '/api': 'http://localhost:3000',
       '/auth': 'http://localhost:3000',

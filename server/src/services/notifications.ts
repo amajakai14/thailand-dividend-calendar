@@ -2,6 +2,20 @@ import cron from 'node-cron';
 import { getDB } from '../db/schema';
 import { webpush } from './webpush';
 
+export async function testNotification(userId: number): Promise<void> {
+  const db = getDB();
+  const subs = db.prepare(
+    `SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?`
+  ).all(userId) as Array<{ endpoint: string; p256dh: string; auth: string }>;
+
+  for (const sub of subs) {
+    await webpush.sendNotification(
+      { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+      JSON.stringify({ message: 'this is Welcome to Div Application' })
+    );
+  }
+}
+
 export function startNotificationCron(): void {
   // 07:00 Bangkok time daily
   cron.schedule('0 7 * * *', () => { void sendXDNotifications(); }, { timezone: 'Asia/Bangkok' });

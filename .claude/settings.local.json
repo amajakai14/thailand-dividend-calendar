@@ -15,7 +15,27 @@
       "Bash(sqlite3 *)",
       "Bash(npm *)",
       "Bash(rtk git *)",
-      "Bash(git init *)"
+      "Bash(git init *)",
+      "Bash(gh auth *)",
+      "Bash(rtk gh *)",
+      "Bash(rtk tsc *)",
+      "Bash(rtk find *)",
+      "Bash(lsof *)",
+      "Bash(kill 52565)",
+      "Bash(PORT=3001 rtk npm run dev:server)",
+      "Bash(echo \"Server PID: $!\")",
+      "Bash(rtk wc *)",
+      "Bash(rtk ps *)",
+      "Bash(PORT=3001 rtk npx ts-node -P server/tsconfig.json server/src/app.ts)",
+      "Bash(echo \"PID: $!\")",
+      "Read(//private/tmp/**)",
+      "Bash(rtk curl *)",
+      "Bash(kill 57023)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('keys:', list\\(d.keys\\(\\)\\)\\); print\\('count:', d.get\\('count'\\)\\); print\\('data type:', type\\(d.get\\('data'\\)\\).__name__\\); first = d['data'][0] if d.get\\('data'\\) else None; print\\('first record keys:', list\\(first.keys\\(\\)\\) if first else 'no data'\\)\")",
+      "Bash(python3 *)",
+      "Bash(kill 60152)",
+      "Bash(pkill -f \"server/src/app.ts\")",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

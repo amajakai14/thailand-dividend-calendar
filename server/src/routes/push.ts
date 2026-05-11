@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getDB } from '../db/schema';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { VAPID_PUBLIC_KEY } from '../services/webpush';
+import { testNotification } from '../services/notifications';
 
 const router = Router();
 
@@ -38,6 +39,12 @@ router.post('/subscription', requireAuth, (req: AuthRequest, res: Response) => {
   ).run(req.userId, endpoint, p256dh, auth);
 
   res.status(201).json({ ok: true });
+});
+
+// POST /api/push/test — send welcome push to calling user
+router.post('/test', requireAuth, async (req: AuthRequest, res: Response) => {
+  await testNotification(req.userId!);
+  res.json({ ok: true });
 });
 
 // DELETE /api/push/subscription — requireAuth

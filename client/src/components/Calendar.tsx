@@ -1,203 +1,124 @@
-import { useState, useEffect } from 'react';
-import { api, DividendRecord, DividendsResponse } from '../services/api';
-import DayCell from './DayCell';
-import TickerDetail from './TickerDetail';
+import { memo } from 'react';
+import { DividendRecord } from '../services/api';
+import { Colors } from '../design/colors';
 
-const DOW_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DOW = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
-function todayISO(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+function toISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export default function Calendar() {
-  const now = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year, setYear] = useState(now.getFullYear());
-  const [dividends, setDividends] = useState<DividendRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<DividendRecord | null>(null);
+function sameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    api
-      .get<DividendsResponse>(`/api/dividends?month=${month}&year=${year}`)
-      .then(res => setDividends(res.data))
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [month, year]);
-
-  function prevMonth() {
-    if (month === 1) { setMonth(12); setYear(y => y - 1); }
-    else { setMonth(m => m - 1); }
-  }
-
-  function nextMonth() {
-    if (month === 12) { setMonth(1); setYear(y => y + 1); }
-    else { setMonth(m => m + 1); }
-  }
-
-  const monthLabel = new Date(year, month - 1, 1).toLocaleString('en-US', {
-    month: 'long',
-    year: 'numeric',
+function buildGrid(year: number, month0: number): Date[] {
+  const first = new Date(year, month0, 1);
+  const lead = first.getDay();
+  const start = new Date(year, month0, 1 - lead);
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return d;
   });
+}
 
-  const firstDay = new Date(year, month - 1, 1).getDay();
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const slots: number[] = [
-    ...Array(firstDay).fill(0),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-  while (slots.length % 7 !== 0) slots.push(0);
+interface Props {
+  year: number;
+  month0: number;
+  selected: Date;
+  today: Date;
+  xdMap: Map<string, DividendRecord[]>;
+  payMap: Map<string, DividendRecord[]>;
+  filter: 'all' | 'watchlist';
+  watchlistTickers: Set<string>;
+  onSelectDate: (d: Date) => void;
+  C: Colors;
+}
 
-  const xdMap = new Map<string, DividendRecord[]>();
-  const payMap = new Map<string, DividendRecord[]>();
-  for (const r of dividends) {
-    if (r.xd_date) {
-      const arr = xdMap.get(r.xd_date) ?? [];
-      arr.push(r);
-      xdMap.set(r.xd_date, arr);
-    }
-    if (r.pay_date) {
-      const arr = payMap.get(r.pay_date) ?? [];
-      arr.push(r);
-      payMap.set(r.pay_date, arr);
-    }
-  }
-
-  const today = todayISO();
+function CalendarInner({ year, month0, selected, today, xdMap, payMap, filter, watchlistTickers, onSelectDate, C }: Props) {
+  const cells = buildGrid(year, month0);
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-      {/* Nav row */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 12,
-        }}
-      >
-        <button
-          onClick={prevMonth}
-          style={{
-            padding: '6px 14px',
-            cursor: 'pointer',
-            border: '1px solid #d1d5db',
-            borderRadius: 6,
-            background: '#fff',
-            fontSize: 16,
-          }}
-        >
-          ←
-        </button>
-        <span style={{ fontWeight: 700, fontSize: 16, color: '#111827' }}>{monthLabel}</span>
-        <button
-          onClick={nextMonth}
-          style={{
-            padding: '6px 14px',
-            cursor: 'pointer',
-            border: '1px solid #d1d5db',
-            borderRadius: 6,
-            background: '#fff',
-            fontSize: 16,
-          }}
-        >
-          →
-        </button>
-      </div>
-
-      {/* Day-of-week header */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          marginBottom: 2,
-        }}
-      >
-        {DOW_LABELS.map(d => (
-          <div
-            key={d}
-            style={{
-              textAlign: 'center',
-              fontSize: 12,
-              color: '#6b7280',
-              fontWeight: 600,
-              padding: '4px 0',
-            }}
-          >
-            {d}
-          </div>
+    <div style={{ padding: '0 16px 8px' }}>
+      {/* DOW header */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 6 }}>
+        {DOW.map((d, i) => (
+          <div key={d} style={{
+            textAlign: 'center', fontSize: 10.5, fontWeight: 600, letterSpacing: 0.6,
+            color: (i === 0 || i === 6) ? C.weekend : C.muted,
+            padding: '6px 0',
+          }}>{d}</div>
         ))}
       </div>
 
       {/* Grid */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>Loading...</div>
-      ) : error ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#b91c1c' }}>{error}</div>
-      ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
-          }}
-        >
-          {slots.map((day, i) => {
-            const dateKey =
-              day === 0
-                ? ''
-                : `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            return (
-              <DayCell
-                key={i}
-                day={day}
-                xdRecords={dateKey ? (xdMap.get(dateKey) ?? []) : []}
-                payRecords={dateKey ? (payMap.get(dateKey) ?? []) : []}
-                onSelectTicker={setSelected}
-                isToday={dateKey === today}
-              />
-            );
-          })}
-        </div>
-      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+        {cells.map((d, i) => {
+          const inMonth = d.getMonth() === month0;
+          const iso = toISO(d);
+          const rawXd = xdMap.get(iso) ?? [];
+          const rawPay = payMap.get(iso) ?? [];
+          const xd = filter === 'watchlist' ? rawXd.filter(r => watchlistTickers.has(r.ticker.toUpperCase())) : rawXd;
+          const pay = filter === 'watchlist' ? rawPay.filter(r => watchlistTickers.has(r.ticker.toUpperCase())) : rawPay;
+          const isSelected = sameDay(d, selected);
+          const isToday = sameDay(d, today);
+          const dow = d.getDay();
+          const isWeekend = dow === 0 || dow === 6;
 
-      {/* Legend */}
-      <div style={{ display: 'flex', gap: 16, marginTop: 12, fontSize: 12, color: '#374151' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span
-            style={{
-              display: 'inline-block',
-              width: 12,
-              height: 12,
-              borderRadius: 9999,
-              backgroundColor: '#fee2e2',
-              border: '1px solid #fca5a5',
-            }}
-          />
-          XD date
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span
-            style={{
-              display: 'inline-block',
-              width: 12,
-              height: 12,
-              borderRadius: 9999,
-              backgroundColor: '#dcfce7',
-              border: '1px solid #86efac',
-            }}
-          />
-          Pay date
-        </div>
+          return (
+            <button
+              key={i}
+              onClick={() => onSelectDate(d)}
+              style={{
+                appearance: 'none', border: 0, padding: 0, cursor: 'pointer',
+                fontFamily: 'inherit', aspectRatio: '1 / 1.18',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'flex-start', borderRadius: 12,
+                background: isSelected ? C.selectedBg : 'transparent',
+                transition: 'background 120ms',
+              }}
+            >
+              <div style={{
+                marginTop: 7, width: 28, height: 28, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 15,
+                fontWeight: isToday ? 700 : (isSelected ? 600 : 500),
+                color: !inMonth ? C.outMonth : isToday ? '#fff' : isWeekend ? C.weekend : C.text,
+                background: isToday ? C.today : 'transparent',
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {d.getDate()}
+              </div>
+
+              <div style={{ marginTop: 4, display: 'flex', gap: 3, alignItems: 'center', height: 8 }}>
+                {xd.length > 0 && (
+                  <span style={{
+                    width: xd.length > 1 ? 14 : 6, height: 6, borderRadius: 3,
+                    background: C.xd,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 8, fontWeight: 700, color: '#fff', lineHeight: 1,
+                  }}>
+                    {xd.length > 1 ? xd.length : ''}
+                  </span>
+                )}
+                {pay.length > 0 && (
+                  <span style={{
+                    width: pay.length > 1 ? 14 : 6, height: 6, borderRadius: 3,
+                    background: C.pay,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 8, fontWeight: 700, color: '#fff', lineHeight: 1,
+                  }}>
+                    {pay.length > 1 ? pay.length : ''}
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
-
-      <TickerDetail record={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
+
+export default memo(CalendarInner);

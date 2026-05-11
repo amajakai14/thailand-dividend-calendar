@@ -1,12 +1,11 @@
 /// <reference lib="webworker" />
 
-declare const self: ServiceWorkerGlobalScope;
+declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: unknown[] };
 
-// Required by vite-plugin-pwa injectManifest — injects precache list at build time
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-void (self as any).__WB_MANIFEST;
-
-self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('install', (event: ExtendableEvent) => {
+  // vite-plugin-pwa injectManifest injection point — must stay in compiled output
+  event.waitUntil(Promise.resolve(self.__WB_MANIFEST).then(() => self.skipWaiting()));
+});
 self.addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil(self.clients.claim());
 });
