@@ -12,12 +12,18 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
 
 self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
-  const payload = event.data.json() as { ticker: string; xdDate: string; cashPerShare: number };
+  const payload = event.data.json() as {
+    ticker?: string; xdDate?: string; cashPerShare?: number;
+    title?: string; message?: string;
+  };
+  const title = payload.title ?? (payload.ticker ? `XD Alert: ${payload.ticker}` : 'TH Div Calendar');
+  const body = payload.message
+    ?? (payload.ticker ? `XD Date: ${payload.xdDate} · ฿${payload.cashPerShare}/share` : '');
   event.waitUntil(
-    self.registration.showNotification(`XD Alert: ${payload.ticker}`, {
-      body: `XD Date: ${payload.xdDate} · ฿${payload.cashPerShare}/share`,
+    self.registration.showNotification(title, {
+      body,
       icon: '/icon-192.png',
-      tag: `xd-${payload.ticker}`,
+      tag: payload.ticker ? `xd-${payload.ticker}` : 'debug',
     })
   );
 });

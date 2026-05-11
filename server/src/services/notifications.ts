@@ -9,10 +9,14 @@ export async function testNotification(userId: number): Promise<void> {
   ).all(userId) as Array<{ endpoint: string; p256dh: string; auth: string }>;
 
   for (const sub of subs) {
-    await webpush.sendNotification(
-      { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-      JSON.stringify({ message: 'this is Welcome to Div Application' })
-    );
+    try {
+      await webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        JSON.stringify({ message: 'this is Welcome to Div Application' })
+      );
+    } catch (err) {
+      console.error('[notifications] test push failed:', err);
+    }
   }
 }
 

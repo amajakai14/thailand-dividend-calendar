@@ -47,6 +47,32 @@ router.post('/test', requireAuth, async (req: AuthRequest, res: Response) => {
   res.json({ ok: true });
 });
 
+// POST /api/push/test-direct — no auth, send test push to given subscription (debug)
+router.post('/test-direct', async (req, res: Response) => {
+  const parse = SubSchema.safeParse(req.body);
+  if (!parse.success) {
+    res.status(400).json({ error: parse.error.flatten() });
+    return;
+  }
+  const { endpoint, p256dh, auth } = parse.data;
+  const { webpush } = await import('../services/webpush');
+  try {
+    await webpush.sendNotification(
+      { endpoint, keys: { p256dh, auth } },
+      JSON.stringify({ title: 'Push Debug', message: 'Test from TH Div Calendar — it works!' })
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    const e = err as { statusCode?: number; message?: string; body?: string; headers?: Record<string, string> };
+    res.status(500).json({
+      error: e.message ?? 'send failed',
+      statusCode: e.statusCode,
+      body: e.body,
+      headers: e.headers,
+    });
+  }
+});
+
 // DELETE /api/push/subscription — requireAuth
 router.delete('/subscription', requireAuth, (req: AuthRequest, res: Response) => {
   const db = getDB();

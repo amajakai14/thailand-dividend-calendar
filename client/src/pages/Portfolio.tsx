@@ -19,6 +19,19 @@ export default function Portfolio() {
   const [watchlist, setWatchlist] = useState<{ ticker: string }[]>([]);
   const [watchInput, setWatchInput] = useState('');
   const push = usePushNotification();
+  const [testPushStatus, setTestPushStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  async function handleTestPush() {
+    setTestPushStatus('sending');
+    try {
+      await api.post('/api/push/test', {});
+      setTestPushStatus('sent');
+      setTimeout(() => setTestPushStatus('idle'), 3000);
+    } catch {
+      setTestPushStatus('error');
+      setTimeout(() => setTestPushStatus('idle'), 3000);
+    }
+  }
 
   async function fetchHoldings() {
     const data = await api.get<Holding[]>('/api/portfolio');
@@ -198,11 +211,20 @@ export default function Portfolio() {
         ) : push.enabled ? (
           <div>
             <p style={{ color: '#15803d', fontSize: 14, marginBottom: 8 }}>✓ Notifications enabled</p>
-            <button
-              onClick={() => push.disable()}
-              disabled={push.loading}
-              style={{ padding: '7px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
-            >Disable</button>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                onClick={() => push.disable()}
+                disabled={push.loading}
+                style={{ padding: '7px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
+              >Disable</button>
+              <button
+                onClick={handleTestPush}
+                disabled={testPushStatus === 'sending'}
+                style={{ padding: '7px 16px', background: '#6b7280', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
+              >
+                {testPushStatus === 'sending' ? 'Sending…' : testPushStatus === 'sent' ? 'Sent!' : testPushStatus === 'error' ? 'Failed' : 'Test Notification'}
+              </button>
+            </div>
           </div>
         ) : (
           <div>
