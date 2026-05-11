@@ -23,14 +23,9 @@ export default function Portfolio() {
 
   async function handleTestPush() {
     setTestPushStatus('sending');
-    try {
-      await api.post('/api/push/test', {});
-      setTestPushStatus('sent');
-      setTimeout(() => setTestPushStatus('idle'), 3000);
-    } catch {
-      setTestPushStatus('error');
-      setTimeout(() => setTestPushStatus('idle'), 3000);
-    }
+    const result = await push.test();
+    setTestPushStatus(result.ok ? 'sent' : 'error');
+    setTimeout(() => setTestPushStatus('idle'), 3000);
   }
 
   async function fetchHoldings() {
