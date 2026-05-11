@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import IncomeSummary from '../components/IncomeSummary';
 import { usePushNotification } from '../hooks/usePushNotification';
+import { colors, Colors } from '../design/colors';
+import TabBar from '../components/TabBar';
 
 interface Holding {
   ticker: string;
@@ -11,6 +13,7 @@ interface Holding {
 
 export default function Portfolio() {
   const navigate = useNavigate();
+  const C = colors(false);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [tickerInput, setTickerInput] = useState('');
   const [qtyInput, setQtyInput] = useState('');
@@ -92,146 +95,199 @@ export default function Portfolio() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ margin: 0, fontSize: 20 }}>My Portfolio</h1>
-        <a
-          href="/"
-          onClick={e => { e.preventDefault(); navigate('/'); }}
-          style={{ color: '#2563eb', textDecoration: 'none' }}
-        >
-          ← Calendar
-        </a>
+    <div style={{
+      width: '100%', flex: 1, minHeight: 0,
+      background: C.bg, color: C.text,
+      fontFamily: "'Inter', -apple-system, 'SF Pro Text', system-ui, sans-serif",
+      display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden',
+      borderRadius: 'clamp(16px, 4vw, 22px)',
+      boxShadow: '0 1px 2px rgba(20,18,12,0.04), 0 12px 30px rgba(20,18,12,0.07)',
+      border: `1px solid ${C.divider}`,
+    }}>
+      {/* Header */}
+      <div style={{ padding: 'var(--screen-pad) var(--screen-pad) 8px', flexShrink: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.2, color: C.muted, textTransform: 'uppercase' }}>
+          Account
+        </div>
+        <div style={{
+          fontSize: 'clamp(22px, 6.5vw, 26px)', fontWeight: 700, letterSpacing: -0.6, marginTop: 2,
+          fontFamily: '"SF Pro Display", -apple-system, system-ui',
+        }}>
+          Portfolio
+        </div>
       </div>
 
-      <form onSubmit={handleAdd} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 }}>
-        <input
-          type="text"
-          value={tickerInput}
-          onChange={e => setTickerInput(e.target.value.toUpperCase())}
-          placeholder="TICKER"
-          style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 4, width: 120, fontSize: 14 }}
-        />
-        <input
-          type="number"
-          value={qtyInput}
-          onChange={e => setQtyInput(e.target.value)}
-          placeholder="Qty"
-          min={1}
-          style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 4, width: 100, fontSize: 14 }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ padding: '7px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
-        >
-          Add
-        </button>
-      </form>
+      {/* Scroll body */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 var(--screen-pad) 80px' }}>
+        {/* Add holding */}
+        <Section title="Holdings" C={C}>
+          <form onSubmit={handleAdd} style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+            <input type="text" value={tickerInput}
+              onChange={e => setTickerInput(e.target.value.toUpperCase())}
+              placeholder="TICKER"
+              style={{ ...inputStyle(C), flex: 1, minWidth: 0 }} />
+            <input type="number" value={qtyInput}
+              onChange={e => setQtyInput(e.target.value)}
+              placeholder="Qty" min={1}
+              style={{ ...inputStyle(C), width: 80 }} />
+            <button type="submit" disabled={loading} style={{
+              appearance: 'none', border: 0, fontFamily: 'inherit',
+              background: C.text, color: C.bg, borderRadius: 10, padding: '0 14px',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              opacity: loading ? 0.6 : 1,
+            }}>Add</button>
+          </form>
+          {error && <div style={{ color: C.xd, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{error}</div>}
 
-      {error && <p style={{ color: '#dc2626', marginBottom: 12, fontSize: 14 }}>{error}</p>}
-
-      {holdings.length === 0 ? (
-        <p style={{ color: '#6b7280' }}>No holdings yet. Add a ticker above.</p>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, marginBottom: 8 }}>
-          <thead>
-            <tr style={{ background: '#f3f4f6' }}>
-              <th style={{ padding: '8px 10px', textAlign: 'left', border: '1px solid #e5e7eb' }}>Ticker</th>
-              <th style={{ padding: '8px 10px', textAlign: 'right', border: '1px solid #e5e7eb' }}>Quantity</th>
-              <th style={{ padding: '8px 10px', textAlign: 'center', border: '1px solid #e5e7eb' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {holdings.map((h, i) => (
-              <tr key={h.ticker} style={{ background: i % 2 === 0 ? '#fff' : '#f9fafb' }}>
-                <td style={{ padding: '7px 10px', border: '1px solid #e5e7eb', fontWeight: 600 }}>{h.ticker}</td>
-                <td style={{ padding: '7px 10px', border: '1px solid #e5e7eb', textAlign: 'right' }}>{h.quantity.toLocaleString()}</td>
-                <td style={{ padding: '7px 10px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                  <button
-                    onClick={() => handleRemove(h.ticker)}
-                    style={{ padding: '4px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 }}
-                  >
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <IncomeSummary holdings={holdings} />
-
-      {/* Watchlist section */}
-      <div style={{ marginTop: 32 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>XD Watchlist</h2>
-        <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 12 }}>
-          Tickers on your watchlist will trigger push notifications before their XD date.
-        </p>
-        <form onSubmit={handleWatchAdd} style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          <input
-            type="text"
-            value={watchInput}
-            onChange={e => setWatchInput(e.target.value.toUpperCase())}
-            placeholder="TICKER"
-            style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 4, width: 120, fontSize: 14 }}
-          />
-          <button type="submit" style={{ padding: '7px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}>
-            Watch
-          </button>
-        </form>
-        {watchlist.length === 0 ? (
-          <p style={{ color: '#6b7280', fontSize: 14 }}>No tickers watched yet.</p>
-        ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {watchlist.map(w => (
-              <span key={w.ticker} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#eff6ff', color: '#1d4ed8', padding: '4px 10px', borderRadius: 16, fontSize: 13, fontWeight: 600 }}>
-                {w.ticker}
-                <button
-                  onClick={() => handleWatchRemove(w.ticker)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: 0, fontSize: 14, lineHeight: 1 }}
-                >×</button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Push Notifications section */}
-      <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #e5e7eb' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Push Notifications</h2>
-        {!push.isSupported ? (
-          <p style={{ color: '#6b7280', fontSize: 14 }}>Not supported in this browser.</p>
-        ) : push.enabled ? (
-          <div>
-            <p style={{ color: '#15803d', fontSize: 14, marginBottom: 8 }}>✓ Notifications enabled</p>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button
-                onClick={() => push.disable()}
-                disabled={push.loading}
-                style={{ padding: '7px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
-              >Disable</button>
-              <button
-                onClick={handleTestPush}
-                disabled={testPushStatus === 'sending'}
-                style={{ padding: '7px 16px', background: '#6b7280', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
-              >
-                {testPushStatus === 'sending' ? 'Sending…' : testPushStatus === 'sent' ? 'Sent!' : testPushStatus === 'error' ? 'Failed' : 'Test Notification'}
-              </button>
+          {holdings.length === 0 ? (
+            <Empty C={C}>No holdings yet.</Empty>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {holdings.map(h => (
+                <div key={h.ticker} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: C.surface, border: `1px solid ${C.divider}`,
+                  borderRadius: 12, padding: '10px 12px',
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.2 }}>{h.ticker}</div>
+                    <div style={{ fontSize: 11.5, color: C.muted, fontVariantNumeric: 'tabular-nums', marginTop: 1 }}>
+                      {h.quantity.toLocaleString()} shares
+                    </div>
+                  </div>
+                  <button onClick={() => handleRemove(h.ticker)} style={{
+                    appearance: 'none', border: `1px solid ${C.xd}33`,
+                    background: `${C.xd}14`, color: C.xd, fontFamily: 'inherit',
+                    borderRadius: 999, padding: '5px 12px',
+                    fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                  }}>Remove</button>
+                </div>
+              ))}
             </div>
-          </div>
-        ) : (
-          <div>
-            <button
-              onClick={() => push.enable()}
-              disabled={push.loading}
-              style={{ padding: '7px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 14 }}
-            >Enable Notifications</button>
-            {push.error && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 8 }}>{push.error}</p>}
-          </div>
-        )}
+          )}
+        </Section>
+
+        {/* Income */}
+        <Section title="Estimated Income" C={C}>
+          <IncomeSummary holdings={holdings} />
+        </Section>
+
+        {/* Watchlist */}
+        <Section title="XD Watchlist" C={C}>
+          <p style={{ fontSize: 12, color: C.muted, marginBottom: 10, lineHeight: 1.4 }}>
+            Watched tickers push notify before XD date.
+          </p>
+          <form onSubmit={handleWatchAdd} style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+            <input type="text" value={watchInput}
+              onChange={e => setWatchInput(e.target.value.toUpperCase())}
+              placeholder="TICKER"
+              style={{ ...inputStyle(C), flex: 1, minWidth: 0 }} />
+            <button type="submit" style={{
+              appearance: 'none', border: 0, fontFamily: 'inherit',
+              background: C.text, color: C.bg, borderRadius: 10, padding: '0 14px',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer',
+            }}>Watch</button>
+          </form>
+          {watchlist.length === 0 ? (
+            <Empty C={C}>No tickers watched.</Empty>
+          ) : (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {watchlist.map(w => (
+                <span key={w.ticker} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  background: `${C.today}14`, color: C.today,
+                  border: `1px solid ${C.today}33`,
+                  padding: '4px 6px 4px 10px', borderRadius: 999,
+                  fontSize: 12, fontWeight: 700,
+                }}>
+                  {w.ticker}
+                  <button onClick={() => handleWatchRemove(w.ticker)} style={{
+                    appearance: 'none', background: 'none', border: 0,
+                    cursor: 'pointer', color: C.today, padding: 0,
+                    fontSize: 16, lineHeight: 1, width: 18, height: 18,
+                  }}>×</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </Section>
+
+        {/* Push */}
+        <Section title="Push Notifications" C={C}>
+          {!push.isSupported ? (
+            <Empty C={C}>Not supported in this browser.</Empty>
+          ) : push.enabled ? (
+            <div>
+              <div style={{
+                fontSize: 12.5, color: C.pay, fontWeight: 700, marginBottom: 10,
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.pay }} />
+                Notifications enabled
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => push.disable()} disabled={push.loading} style={{
+                  flex: 1, appearance: 'none', border: `1px solid ${C.xd}33`,
+                  background: `${C.xd}14`, color: C.xd, fontFamily: 'inherit',
+                  borderRadius: 10, padding: '10px', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                }}>Disable</button>
+                <button onClick={handleTestPush} disabled={testPushStatus === 'sending'} style={{
+                  flex: 1, appearance: 'none', border: `1px solid ${C.divider}`,
+                  background: C.surface, color: C.text, fontFamily: 'inherit',
+                  borderRadius: 10, padding: '10px', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                }}>
+                  {testPushStatus === 'sending' ? 'Sending…' :
+                    testPushStatus === 'sent' ? 'Sent!' :
+                    testPushStatus === 'error' ? 'Failed' : 'Test'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <button onClick={() => push.enable()} disabled={push.loading} style={{
+                width: '100%', appearance: 'none', border: 0, fontFamily: 'inherit',
+                background: C.text, color: C.bg, borderRadius: 10, padding: '11px',
+                fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                opacity: push.loading ? 0.6 : 1,
+              }}>Enable Notifications</button>
+              {push.error && <p style={{ color: C.xd, fontSize: 12, marginTop: 8, fontWeight: 600 }}>{push.error}</p>}
+            </div>
+          )}
+        </Section>
       </div>
+
+      <TabBar C={C} active="dashboard" onNavigate={(id) => {
+        if (id === 'calendar') navigate('/');
+      }} />
     </div>
   );
+}
+
+function Section({ title, children, C }: { title: string; children: React.ReactNode; C: Colors }) {
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div style={{
+        fontSize: 11, fontWeight: 700, letterSpacing: 1, color: C.muted,
+        textTransform: 'uppercase', marginBottom: 8,
+      }}>{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function Empty({ children, C }: { children: React.ReactNode; C: Colors }) {
+  return (
+    <div style={{
+      padding: '14px', textAlign: 'center', color: C.muted, fontSize: 12.5,
+      background: C.surface2, borderRadius: 10,
+    }}>{children}</div>
+  );
+}
+
+function inputStyle(C: Colors): React.CSSProperties {
+  return {
+    appearance: 'none', border: `1px solid ${C.divider}`, background: C.surface,
+    color: C.text, borderRadius: 10, padding: '10px 12px',
+    fontSize: 13, fontFamily: 'inherit', outline: 'none',
+  };
 }

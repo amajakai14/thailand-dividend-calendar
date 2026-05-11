@@ -85,18 +85,39 @@ The accent palette is selectable via Tweaks. **Never invent new accent values** 
 ## 4. Spacing & Radius
 
 - Base unit: **4px**. Use 4 / 6 / 8 / 10 / 12 / 14 / 16 / 20 / 24.
-- Screen padding: `20px` horizontal
-- Card padding: `12px 14px`
-- Sheet padding: `0 20px`
+- Screen padding: `var(--screen-pad)` = `clamp(12px, 4.5vw, 20px)` — shrinks below 375px so the calendar grid still breathes at 300–360px
+- Card padding: `10px 12px` (compact mobile) up to `12px 14px` at the design ceiling
+- Sheet padding: `0 var(--screen-pad)` — uses the same shrink scale
+- Outer shell padding (between viewport edge and the app card): `var(--outer-pad)` = `clamp(6px, 2.4vw, 14px)`, combined with `env(safe-area-inset-*)`. The body owns this padding; the app renders as a rounded card on top of `--shell-bg` (`#EAE4D3`)
 
-| Radius | Where                                   |
-| ------ | --------------------------------------- |
-| 8      | Tab buttons, key tiles                  |
-| 10     | Inset tracks (segmented)                |
-| 12     | Calendar cells, modal buttons, timeline |
-| 14     | Cards, modal hero panel                 |
-| 24     | Bottom sheet, modal top corners         |
-| 999    | Pills, segmented toggles, dots, handles |
+| Radius | Where                                            |
+| ------ | ------------------------------------------------ |
+| 8      | Tab buttons, key tiles                           |
+| 10     | Inset tracks (segmented), inputs                 |
+| 12     | Calendar cells, modal buttons, timeline, list cards |
+| 14     | Cards, modal hero panel                          |
+| 16–22  | App card shell (`clamp(16px, 4vw, 22px)`)        |
+| 24     | Bottom sheet, modal top corners                  |
+| 999    | Pills, segmented toggles, dots, handles          |
+
+### 4.1 Responsive scale (300–414px target band)
+
+The app is laid out as a **single phone-shaped card** centered in the viewport. Internal paddings and font sizes are `clamp()`-driven so the same JSX renders comfortably from 300px (smallest folded display) up to 430px (the design ceiling).
+
+| Token / spot      | Value                              | Min @ 300px | Max @ ≥430px |
+| ----------------- | ---------------------------------- | ----------- | ------------ |
+| `--outer-pad`     | `clamp(6px, 2.4vw, 14px)`          | 7.2px       | 14px         |
+| `--screen-pad`    | `clamp(12px, 4.5vw, 20px)`         | 13.5px      | 20px         |
+| `--card-pad-h`    | `clamp(10px, 3.8vw, 16px)`         | 11.4px      | 16px         |
+| Calendar h-pad    | `clamp(8px, 2.5vw, 16px)`          | 8px         | 16px         |
+| Date circle       | `clamp(22px, 7vw, 28px)`           | 22px        | 28px         |
+| Date number       | `clamp(12.5px, 3.8vw, 15px)`       | 12.5px      | 15px         |
+| Month title       | `clamp(22px, 6.5vw, 26px)`         | 22px        | 26px         |
+| Sheet date title  | `clamp(15px, 4.5vw, 18px)`         | 15px        | 18px         |
+| App card radius   | `clamp(16px, 4vw, 22px)`           | 16px        | 22px         |
+| DOW header text   | `clamp(9px, 2.6vw, 10.5px)`        | 9px         | 10.5px       |
+
+The CSS variables live in `client/index.html` (`:root` block) and are consumed via `var(--screen-pad)` / `var(--outer-pad)` inside JSX style props. Never re-hardcode `20px` horizontal padding inside components — read the variable so the whole app scales together.
 
 ---
 
@@ -105,7 +126,8 @@ The accent palette is selectable via Tweaks. **Never invent new accent values** 
 ### 5.1 Calendar cell
 
 - Aspect ratio `1 / 1.18`, transparent background; selected → `selectedBg`
-- Date number in a 28×28 circle. Today → filled with `today` color, white text.
+- Date number in a `clamp(22px, 7vw, 28px)` circle (28 at design ceiling, 22 at 300px). Today → filled with `today` color, white text.
+- Grid gap `1px`; cell padding scales with `--screen-pad`.
 - Event markers below: 6px round dots (`xd`, `pay`); when count > 1 the dot widens to `14×6` with white count.
 - Out-of-month dates use `outMonth`.
 
@@ -118,7 +140,8 @@ The accent palette is selectable via Tweaks. **Never invent new accent values** 
 
 ### 5.3 Stock card
 
-- Left tile `46×46`, tinted with the active accent (`xd` or `pay`) at 8% bg / 20% border.
+- Left tile `42×42` (mobile-tight); tinted with the active accent (`xd` or `pay`) at 8% bg / 20% border.
+- Padding `10px 12px`, gap `10px`, `min-width: 0` on the inner column so long company names truncate cleanly at 300px.
 - Three-line layout: ticker + price · name + sector · DPS + yield + paired date.
 
 ### 5.4 Tab bar
@@ -133,6 +156,14 @@ The accent palette is selectable via Tweaks. **Never invent new accent values** 
 - Slides up from bottom over a `rgba(15,12,4,0.42)` scrim.
 - Hero panel uses `surface2`; yield value uses `pay` color.
 - Primary action button: filled `text` on `bg`. Secondary: outlined on `surface`.
+
+### 5.6 App shell (page card)
+
+- The entire screen lives inside a centered card with `max-width: 430px`, `border-radius: clamp(16px, 4vw, 22px)`, `border: 1px solid divider`, and a soft drop shadow (`0 1px 2px rgba(20,18,12,0.04), 0 12px 30px rgba(20,18,12,0.07)`).
+- The card always has visible breathing room from the viewport edge — the `<body>` carries `var(--outer-pad)` padding plus `env(safe-area-inset-*)`. Page bg outside the card is `--shell-bg` (`#EAE4D3`), one step warmer than the in-card `bg` (`#F6F4EE`).
+- All top-level pages (Home, Login, Register, Portfolio) use this same shell. The `TabBar` and `BottomSheet` are `position: absolute` children of the card, so they pin to the card's bottom — not the viewport.
+- Forms (Login, Register, Add holding, Add watchlist) use `surface` inputs with `1px divider` border, radius `10`, padding `10–11px 12px`. Field labels are 11px / 600 / uppercase / muted with `letter-spacing: 0.5`.
+- Tabular data (holdings, income) is rendered as **stacked cards on mobile**, not HTML tables. Each row is a `surface` card with the same accent-tile pattern as Stock cards: 42×42 left tile in `xd`/`pay`/`today` tint + right column with min-width 0 for truncation.
 
 ---
 
@@ -159,3 +190,6 @@ The accent palette is selectable via Tweaks. **Never invent new accent values** 
 2. Don't add a fourth accent palette without also updating the Tweaks select in `Dividend Calendar.html`.
 3. When adding a new screen, register it with `data-screen-label` on its root div.
 4. Keep the warm neutral feel: avoid pure white surfaces in light mode (use `#FFFFFF` only for cards, never the page bg).
+5. Horizontal padding **must** use `var(--screen-pad)` (or the matching clamp) — never a bare `20px`. Outer body padding **must** use `var(--outer-pad)` + `env(safe-area-inset-*)`.
+6. Every new top-level page must wrap its content in the App shell (5.6): `flex: 1`, rounded border, drop shadow, divider border. Never let a page reach the viewport edge.
+7. Never render a HTML `<table>` for data on mobile pages — convert to a vertical stack of `surface` cards with min-width 0 inner columns so long strings truncate.

@@ -40,12 +40,12 @@ function CalendarInner({ year, month0, selected, today, xdMap, payMap, filter, w
   const cells = buildGrid(year, month0);
 
   return (
-    <div style={{ padding: '0 16px 8px' }}>
+    <div style={{ padding: '0 clamp(8px, 2.5vw, 16px) 8px' }}>
       {/* DOW header */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 4 }}>
         {DOW.map((d, i) => (
           <div key={d} style={{
-            textAlign: 'center', fontSize: 10.5, fontWeight: 600, letterSpacing: 0.6,
+            textAlign: 'center', fontSize: 'clamp(9px, 2.6vw, 10.5px)', fontWeight: 600, letterSpacing: 0.5,
             color: (i === 0 || i === 6) ? C.weekend : C.muted,
             padding: '6px 0',
           }}>{d}</div>
@@ -53,7 +53,7 @@ function CalendarInner({ year, month0, selected, today, xdMap, payMap, filter, w
       </div>
 
       {/* Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1 }}>
         {cells.map((d, i) => {
           const inMonth = d.getMonth() === month0;
           const iso = toISO(d);
@@ -80,9 +80,12 @@ function CalendarInner({ year, month0, selected, today, xdMap, payMap, filter, w
               }}
             >
               <div style={{
-                marginTop: 7, width: 28, height: 28, borderRadius: '50%',
+                marginTop: 6,
+                width: 'clamp(22px, 7vw, 28px)',
+                height: 'clamp(22px, 7vw, 28px)',
+                borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 15,
+                fontSize: 'clamp(12.5px, 3.8vw, 15px)',
                 fontWeight: isToday ? 700 : (isSelected ? 600 : 500),
                 color: !inMonth ? C.outMonth : isToday ? '#fff' : isWeekend ? C.weekend : C.text,
                 background: isToday ? C.today : 'transparent',
@@ -91,7 +94,7 @@ function CalendarInner({ year, month0, selected, today, xdMap, payMap, filter, w
                 {d.getDate()}
               </div>
 
-              <div style={{ marginTop: 4, display: 'flex', gap: 3, alignItems: 'center', height: 8 }}>
+              <div style={{ marginTop: 3, display: 'flex', gap: 3, alignItems: 'center', height: 8 }}>
                 {xd.length > 0 && (
                   <span style={{
                     width: xd.length > 1 ? 14 : 6, height: 6, borderRadius: 3,

@@ -32,15 +32,15 @@ function StockCard({ record, tab, C, watchlistTickers, onClick }: {
       onClick={onClick}
       style={{
         appearance: 'none', border: `1px solid ${C.divider}`, fontFamily: 'inherit',
-        background: C.surface, borderRadius: 14, padding: '12px 14px',
+        background: C.surface, borderRadius: 14, padding: '10px 12px',
         cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center',
-        gap: 12, color: C.text, width: '100%',
+        gap: 10, color: C.text, width: '100%', minWidth: 0,
         transition: 'transform 80ms ease',
       }}
     >
       {/* Ticker tile */}
       <div style={{
-        width: 46, height: 46, borderRadius: 10, flexShrink: 0,
+        width: 42, height: 42, borderRadius: 10, flexShrink: 0,
         background: `${accentColor}14`,
         border: `1px solid ${accentColor}33`,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -165,11 +165,12 @@ export default function BottomSheet({ C, state, setState, dateLabel, xdList, pay
       </div>
 
       {/* Date title */}
-      <div style={{ padding: '4px 20px 10px', flexShrink: 0 }}>
+      <div style={{ padding: '4px var(--screen-pad) 10px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <div style={{
-            fontSize: 18, fontWeight: 700, letterSpacing: -0.3,
+            fontSize: 'clamp(15px, 4.5vw, 18px)', fontWeight: 700, letterSpacing: -0.3,
             fontFamily: '"SF Pro Display", -apple-system, system-ui',
+            minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
           }}>
             {dateLabel}
           </div>
@@ -181,7 +182,7 @@ export default function BottomSheet({ C, state, setState, dateLabel, xdList, pay
 
       {/* Tabs */}
       <div style={{
-        margin: '0 20px', display: 'flex', gap: 6,
+        margin: '0 var(--screen-pad)', display: 'flex', gap: 6,
         background: C.surface2, padding: 3, borderRadius: 10, flexShrink: 0,
       }}>
         {(['xd', 'pay'] as const).map(t => {
@@ -213,7 +214,7 @@ export default function BottomSheet({ C, state, setState, dateLabel, xdList, pay
       </div>
 
       {/* List */}
-      <div style={{ marginTop: 12, flex: 1, overflowY: 'auto', padding: '0 20px 28px' }}>
+      <div style={{ marginTop: 12, flex: 1, overflowY: 'auto', padding: '0 var(--screen-pad) 28px' }}>
         {list.length === 0 ? (
           <EmptyState C={C} tab={tab} />
         ) : (

@@ -8,10 +8,37 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
+      :root {
+        --screen-pad: clamp(12px, 4.5vw, 20px);
+        --card-pad-h: clamp(10px, 3.8vw, 16px);
+        --outer-pad: clamp(6px, 2.4vw, 14px);
+        --app-bg: #F6F4EE;
+        --shell-bg: #2A2823;
+      }
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { width: 100%; height: 100%; background: #F6F4EE; }
-      #root { width: 100%; height: 100%; }
-      body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+      html { width: 100%; height: 100%; }
+      body {
+        width: 100%;
+        min-height: 100dvh;
+        height: 100dvh;
+        background: var(--shell-bg);
+        display: flex;
+        justify-content: center;
+        padding:
+          max(var(--outer-pad), env(safe-area-inset-top))
+          max(var(--outer-pad), env(safe-area-inset-right))
+          max(var(--outer-pad), env(safe-area-inset-bottom))
+          max(var(--outer-pad), env(safe-area-inset-left));
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      #root {
+        width: 100%;
+        max-width: 430px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
       button { -webkit-tap-highlight-color: transparent; }
       @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
       @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }

@@ -24,10 +24,9 @@ const ITEMS = [
     label: 'Dashboard',
     icon: (col: string) => (
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <rect x="3" y="3" width="7" height="9" rx="1.6" stroke={col} strokeWidth="1.7"/>
-        <rect x="12" y="3" width="7" height="5" rx="1.6" stroke={col} strokeWidth="1.7"/>
-        <rect x="12" y="10" width="7" height="9" rx="1.6" stroke={col} strokeWidth="1.7"/>
-        <rect x="3" y="14" width="7" height="5" rx="1.6" stroke={col} strokeWidth="1.7"/>
+        <rect x="3" y="11" width="4" height="8" rx="1.4" stroke={col} strokeWidth="1.7"/>
+        <rect x="9" y="7" width="4" height="12" rx="1.4" stroke={col} strokeWidth="1.7"/>
+        <rect x="15" y="3" width="4" height="16" rx="1.4" stroke={col} strokeWidth="1.7"/>
       </svg>
     ),
   },
