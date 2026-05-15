@@ -229,3 +229,34 @@ th-div-calendar/
 - [ ] systemd service: `th-div-scraper.service` (replace local node-cron with system timer)
 - [ ] Let's Encrypt HTTPS via certbot
 - [ ] Deploy script / GitHub Actions CI
+
+---
+
+### 🔲 Phase 3 — Mobile App (Expo iOS + Android)
+
+**Submodule:** `mobile/` → `https://github.com/amajakai14/th-div-mobile.git`
+**Stack:** Expo SDK 54, Expo Router v6, NativeWind v5, React Query v5, expo-sqlite v13
+
+**Features:**
+- [ ] Auth: JWT login/register with expo-secure-store, three-state loading guard
+- [ ] Calendar: monthly grid, XD + pay dots, ticker detail modal
+- [ ] Portfolio: holdings CRUD, income estimate (holdings × DPS)
+- [ ] Watchlist: add/remove tickers, push notification toggle
+- [ ] Push: Expo Push Notifications via expo-notifications + server-side expo-server-sdk
+- [ ] Offline: SQLite write-through cache; fallback to cached data on network error
+
+**Build & Deploy:**
+- [ ] `eas build --profile development` — dev client for physical device testing
+- [ ] `eas build --profile preview` — APK for internal distribution
+- [ ] `eas build --profile production` — store-ready build
+- [ ] `eas submit` — App Store + Play Store submission
+- [ ] OTA updates via `eas update` (expo-updates)
+
+**Phase 3 QA checklist:**
+- [ ] Login/register flow works on iOS simulator
+- [ ] Calendar loads from API + falls back to SQLite offline
+- [ ] Portfolio add/remove persists across app restarts
+- [ ] Watchlist push toggle registers Expo token with server
+- [ ] Push notification received on physical device (XD alert)
+- [ ] Dark mode renders correct design tokens
+- [ ] No raw hex colors in any component (all via useTheme())
