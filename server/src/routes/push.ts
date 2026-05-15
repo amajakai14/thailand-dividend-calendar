@@ -1,8 +1,11 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
+import Expo from 'expo-server-sdk';
 import { getDB } from '../db/schema';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { VAPID_PUBLIC_KEY, sendPush, StoredSub } from '../services/webpush';
+
+const expoClient = new Expo();
 
 const router = Router();
 
@@ -82,6 +85,34 @@ router.post('/test', requireAuth, async (req: AuthRequest, res: Response) => {
 
   const anyFail = results.some((r) => !r.ok);
   res.status(anyFail ? 207 : 200).json({ ok: !anyFail, results });
+});
+
+// POST /api/push/expo-token
+router.post('/expo-token', requireAuth, (req: AuthRequest, res: Response) => {
+  const { token } = req.body;
+  if (!token || typeof token !== 'string' || !Expo.isExpoPushToken(token)) {
+    res.status(400).json({ error: 'Invalid Expo push token' });
+    return;
+  }
+  try {
+    getDB().prepare(
+      'INSERT OR IGNORE INTO expo_push_tokens (user_id, token) VALUES (?, ?)'
+    ).run(req.userId, token);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to store token' });
+  }
+});
+
+// DELETE /api/push/expo-token
+router.delete('/expo-token', requireAuth, (req: AuthRequest, res: Response) => {
+  const { token } = req.body;
+  if (!token) {
+    res.status(400).json({ error: 'Token required' });
+    return;
+  }
+  getDB().prepare('DELETE FROM expo_push_tokens WHERE user_id = ? AND token = ?').run(req.userId, token);
+  res.json({ ok: true });
 });
 
 export default router;
