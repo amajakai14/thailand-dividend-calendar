@@ -232,18 +232,19 @@ th-div-calendar/
 
 ---
 
-### 🔲 Phase 3 — Mobile App (Expo iOS + Android)
+### ✅ Phase 3 — Mobile App (Expo iOS + Android)
 
 **Submodule:** `mobile/` → `https://github.com/amajakai14/th-div-mobile.git`
 **Stack:** Expo SDK 54, Expo Router v6, NativeWind v5, React Query v5, expo-sqlite v13
+**Completed:** 2026-05-17
 
 **Features:**
-- [ ] Auth: JWT login/register with expo-secure-store, three-state loading guard
-- [ ] Calendar: monthly grid, XD + pay dots, ticker detail modal
-- [ ] Portfolio: holdings CRUD, income estimate (holdings × DPS)
-- [ ] Watchlist: add/remove tickers, push notification toggle
-- [ ] Push: Expo Push Notifications via expo-notifications + server-side expo-server-sdk
-- [ ] Offline: SQLite write-through cache; fallback to cached data on network error
+- [x] Auth: JWT login/register with expo-secure-store, three-state loading guard
+- [x] Calendar: monthly grid, XD + pay dots, ticker detail modal
+- [x] Portfolio: holdings CRUD, income estimate (holdings × DPS)
+- [x] Watchlist: add/remove tickers, push notification toggle
+- [x] Push: Expo Push Notifications via expo-notifications + server-side expo-server-sdk
+- [x] Offline: SQLite write-through cache; fallback to cached data on network error
 
 **Build & Deploy:**
 - [ ] `eas build --profile development` — dev client for physical device testing
