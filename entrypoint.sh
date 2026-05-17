@@ -1,7 +1,10 @@
-#!/bin/sh
+#!/bin/bash
+set -euo pipefail
 
-# Start scraper scheduler in background (fires daily at 07:00 Asia/Bangkok)
-node dist/schedule.js 2>&1 &
+mkdir -p /app/data
 
-# Start Express server in foreground
-exec node dist/server/app.js
+# Scraper scheduler (background)
+node_modules/.bin/ts-node src/schedule.ts &
+
+# Express server (foreground)
+exec node_modules/.bin/ts-node -P server/tsconfig.json server/src/app.ts

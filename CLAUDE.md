@@ -1,6 +1,9 @@
 always talk like caveman
 see scrape issues and solutions in @DEVLOG.md
 control frontend with @DESIGN.md
+always sub agent driven
+
+- when related to Expo or Reactnative always assign to sub-agent expo-rn-export
 
 ## QA Rule — MANDATORY
 
