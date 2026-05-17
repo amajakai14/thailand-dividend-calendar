@@ -1,0 +1,17 @@
+import { defineConfig } from 'vitest/config';
+import path from 'path';
+
+export default defineConfig({
+  root: path.resolve(__dirname),
+  test: {
+    globals: true,
+    environment: 'node',
+    setupFiles: ['./helpers/setup.ts'],
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+  },
+});

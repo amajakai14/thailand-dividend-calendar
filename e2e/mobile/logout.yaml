@@ -1,0 +1,25 @@
+# Flow: logout
+# Login, navigate to Profile, tap Sign out, assert redirect to login screen.
+
+- launchApp:
+    clearState: true
+
+- runFlow: helpers/login.yaml
+
+# Navigate to Profile tab
+- tapOn:
+    text: "Profile"
+
+- assertVisible:
+    text: "ACCOUNT"
+
+# Sign out button is inside the account card
+- tapOn:
+    text: "Sign out"
+
+# After signOut() the router should redirect to /(auth)/login
+- assertVisible:
+    text: "Sign in"
+
+- assertVisible:
+    text: "Thai Dividend Calendar"

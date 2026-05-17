@@ -1,0 +1,20 @@
+# Flow: portfolio-delete
+# Adds a PTT holding (via runFlow), then removes it using the × button on HoldingCard.
+
+- launchApp:
+    clearState: true
+
+# Add holding first
+- runFlow: portfolio-add.yaml
+
+# PTT card is now visible — tap the × remove button
+# HoldingCard renders a Pressable with text "×"
+- tapOn:
+    text: "×"
+
+# PTT card should be gone; empty state message appears
+- assertNotVisible:
+    text: "Qty: 100"
+
+- assertVisible:
+    text: "No holdings yet"

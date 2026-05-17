@@ -6,7 +6,8 @@
     "schedule": "ts-node src/schedule.ts",
     "dev:server": "ts-node -P server/tsconfig.json server/src/app.ts",
     "dev:client": "npm run dev --prefix client",
-    "build": "tsc"
+    "build": "tsc",
+    "test:e2e:api": "vitest run --config e2e/api/vitest.config.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -29,8 +30,12 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.0.0",
     "@types/node-cron": "^3.0.11",
+    "@types/supertest": "^6.0.2",
     "@types/web-push": "^3.6.4",
+    "@vitest/coverage-v8": "^2.0.0",
+    "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
   }
 }

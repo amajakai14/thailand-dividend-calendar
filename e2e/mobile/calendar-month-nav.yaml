@@ -1,0 +1,26 @@
+# Flow: calendar-month-nav
+# Login, note current month header (May 2026), tap next-month button, assert month changed.
+
+- launchApp:
+    clearState: true
+
+- runFlow: helpers/login.yaml
+
+# Current month visible — May 2026 is the seeded dataset month
+- assertVisible:
+    text: "May 2026"
+
+# Tap the right-chevron nav button (›)
+- tapOn:
+    text: "›"
+
+# Month should have advanced to June
+- assertVisible:
+    text: "June 2026"
+
+# Navigate back
+- tapOn:
+    text: "‹"
+
+- assertVisible:
+    text: "May 2026"

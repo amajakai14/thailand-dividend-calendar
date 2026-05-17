@@ -1,0 +1,37 @@
+# Flow: calendar-ticker-modal
+# Login, tap a day cell that has XD dots, assert the DaySheet opens.
+# The sheet shows "Ex-Dividend N" tab and a "Close" button.
+
+- launchApp:
+    clearState: true
+
+- runFlow: helpers/login.yaml
+
+# Confirm calendar is loaded
+- assertVisible:
+    text: "XD date"
+
+# Scroll down slightly so mid-month cells are reachable
+- scroll:
+    direction: down
+    speed: slow
+
+# Tap a day that has events — the DayCell is enabled only when xdRows or payRows > 0.
+# Maestro identifies it by the date number text. 9 May 2026 has XD events in the dataset.
+- tapOn:
+    text: "9"
+
+# DaySheet appears with event count and tab labels
+- assertVisible:
+    text: "Ex-Dividend"
+
+# The sheet also shows a Close button
+- assertVisible:
+    text: "Close"
+
+# Dismiss
+- tapOn:
+    text: "Close"
+
+- assertNotVisible:
+    text: "Close"

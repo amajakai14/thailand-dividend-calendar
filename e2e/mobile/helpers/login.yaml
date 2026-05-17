@@ -1,0 +1,15 @@
+# Reusable login sub-flow.
+# Assumes the app is already launched and sitting on the login screen.
+# Usage: runFlow: helpers/login.yaml
+# Optionally override env vars EMAIL and PASSWORD before running.
+
+- tapOn:
+    text: "you@example.com"
+- inputText: ${EMAIL:-test@example.com}
+- tapOn:
+    text: "••••••••"
+- inputText: ${PASSWORD:-password123}
+- tapOn:
+    text: "Sign in"
+- assertVisible:
+    text: "Calendar"

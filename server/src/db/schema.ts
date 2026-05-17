@@ -1,13 +1,19 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
-const DB_PATH = path.resolve(__dirname, '../../../data/dividends.db');
-
 let db: Database.Database | null = null;
+
+export function resetDB(): void {
+  if (db) {
+    db.close();
+    db = null;
+  }
+}
 
 export function getDB(): Database.Database {
   if (db) return db;
-  db = new Database(DB_PATH);
+  const dbPath = process.env.DB_PATH ?? path.resolve(__dirname, '../../../data/dividends.db');
+  db = new Database(dbPath);
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -54,6 +60,26 @@ export function getDB(): Database.Database {
       user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       token      TEXT NOT NULL UNIQUE,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS dividends (
+      id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+      ticker               TEXT NOT NULL,
+      company_name         TEXT,
+      xd_date              TEXT NOT NULL,
+      book_close_date      TEXT,
+      record_date          TEXT,
+      pay_date             TEXT,
+      approximate_pay_date TEXT,
+      dividend_type        TEXT,
+      cash_per_share       REAL,
+      tentative_dividend   REAL,
+      period_start         TEXT,
+      period_end           TEXT,
+      dividend_from        TEXT,
+      UNIQUE(ticker, xd_date)
     )
   `);
 

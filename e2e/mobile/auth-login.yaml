@@ -1,0 +1,25 @@
+# Flow: auth-login
+# Happy path: open app, fill login form with known test account, land on Calendar tab.
+
+- launchApp:
+    clearState: true
+
+- assertVisible:
+    text: "Sign in"
+
+- assertVisible:
+    text: "Thai Dividend Calendar"
+
+- tapOn:
+    text: "you@example.com"
+- inputText: test@example.com
+
+- tapOn:
+    text: "••••••••"
+- inputText: password123
+
+- tapOn:
+    text: "Sign in"
+
+- assertVisible:
+    text: "Calendar"

@@ -1,0 +1,40 @@
+# Flow: portfolio-add
+# Login, navigate to Portfolio tab, fill ticker PTT + qty 100, submit, assert card appears.
+
+- launchApp:
+    clearState: true
+
+- runFlow: helpers/login.yaml
+
+# Navigate to Portfolio tab
+- tapOn:
+    text: "Portfolio"
+
+- assertVisible:
+    text: "Portfolio"
+
+# The form card label is "ADD HOLDING"
+- assertVisible:
+    text: "ADD HOLDING"
+
+# Fill ticker input (placeholder: "e.g. PTT")
+- tapOn:
+    text: "e.g. PTT"
+- inputText: PTT
+
+# Fill quantity input (placeholder: "100")
+- tapOn:
+    text: "100"
+- inputText: "100"
+
+# Submit
+- tapOn:
+    text: "Add"
+
+# Assert the holding card is visible — HoldingCard renders ticker text "PTT"
+- assertVisible:
+    text: "PTT"
+
+# Confirm quantity label
+- assertVisible:
+    text: "Qty: 100"

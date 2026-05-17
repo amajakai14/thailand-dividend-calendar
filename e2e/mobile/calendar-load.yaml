@@ -1,0 +1,28 @@
+# Flow: calendar-load
+# Verify calendar month grid loads and today's date circle is visible.
+
+- launchApp:
+    clearState: true
+
+- runFlow: helpers/login.yaml
+
+# Calendar tab should be active by default after login
+- assertVisible:
+    text: "Calendar"
+
+# DOW header labels confirm the grid rendered
+- assertVisible:
+    text: "Sun"
+
+- assertVisible:
+    text: "Mon"
+
+- assertVisible:
+    text: "Sat"
+
+# Legend confirms XD / pay key
+- assertVisible:
+    text: "XD date"
+
+- assertVisible:
+    text: "Pay date"

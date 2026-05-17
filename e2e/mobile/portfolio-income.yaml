@@ -1,0 +1,21 @@
+# Flow: portfolio-income
+# Adds a PTT holding and asserts the holdings list section is visible with the
+# ticker and quantity, confirming the portfolio screen reflects the position.
+# Note: income estimate display is driven by dividend data matching the holding;
+# this flow verifies the holding card and section label render correctly.
+
+- launchApp:
+    clearState: true
+
+- runFlow: portfolio-add.yaml
+
+# After adding PTT, the HOLDINGS section label should be visible
+- assertVisible:
+    text: "HOLDINGS"
+
+# HoldingCard shows ticker and quantity
+- assertVisible:
+    text: "PTT"
+
+- assertVisible:
+    text: "Qty: 100"

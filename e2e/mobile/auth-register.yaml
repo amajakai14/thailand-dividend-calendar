@@ -1,0 +1,30 @@
+# Flow: auth-register
+# Happy path: open app, navigate to register, fill form, submit, land on Calendar tab.
+
+- launchApp:
+    clearState: true
+
+# App opens on login screen
+- assertVisible:
+    text: "Sign in"
+
+- tapOn:
+    text: "Don't have an account? Register"
+
+- assertVisible:
+    text: "Create account"
+
+- tapOn:
+    text: "you@example.com"
+- inputText: newuser@example.com
+
+- tapOn:
+    text: "Min 8 characters"
+- inputText: password123
+
+- tapOn:
+    text: "Create account"
+
+# After registration the router replaces to /(tabs) — CalendarGrid is visible
+- assertVisible:
+    text: "Calendar"

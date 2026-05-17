@@ -16,8 +16,10 @@ const PORT = Number(process.env.PORT) || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Init DB on startup
-getDB();
+// Init DB on startup (skipped when imported by tests — DB is lazy per-request)
+if (require.main === module) {
+  getDB();
+}
 startNotificationCron();
 
 // API Routes
@@ -38,8 +40,11 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Only bind to a port when run directly (not when imported by tests)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 export default app;

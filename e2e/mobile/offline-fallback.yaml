@@ -1,0 +1,37 @@
+# Flow: offline-fallback
+# Login with network, let calendar load (data written to SQLite cache),
+# then toggle airplane mode and reopen the app — calendar grid must still render.
+
+- launchApp:
+    clearState: true
+
+- runFlow: helpers/login.yaml
+
+# Wait for calendar data to load and be cached
+- assertVisible:
+    text: "XD date"
+
+- assertVisible:
+    text: "Sun"
+
+# Disable network
+- toggleAirplaneMode
+
+# Relaunch app without clearing state (JWT + SQLite cache preserved)
+- launchApp:
+    clearState: false
+
+# App should auto-sign-in from secure storage and fall back to SQLite
+- assertVisible:
+    text: "Calendar"
+
+# CalendarGrid DOW header proves the grid rendered from cache
+- assertVisible:
+    text: "Sun"
+
+# OfflineBadge renders "Offline · showing cached data" when isOnline=false and data.length>0
+- assertVisible:
+    text: "Offline · showing cached data"
+
+# Re-enable network so device is left in clean state
+- toggleAirplaneMode

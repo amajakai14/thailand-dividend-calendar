@@ -1,0 +1,27 @@
+# Flow: watchlist-add
+# Login, navigate to Profile tab, add KBANK to watchlist, assert it appears.
+
+- launchApp:
+    clearState: true
+
+- runFlow: helpers/login.yaml
+
+# Navigate to Profile tab
+- tapOn:
+    text: "Profile"
+
+- assertVisible:
+    text: "WATCHLIST"
+
+# The watchlist input placeholder is "Ticker"
+- tapOn:
+    text: "Ticker"
+- inputText: KBANK
+
+# Tap the Add button next to the input
+- tapOn:
+    text: "Add"
+
+# TickerCard renders the ticker text
+- assertVisible:
+    text: "KBANK"

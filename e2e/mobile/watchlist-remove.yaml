@@ -1,0 +1,18 @@
+# Flow: watchlist-remove
+# Adds KBANK via runFlow then removes it with the × button on TickerCard.
+
+- launchApp:
+    clearState: true
+
+- runFlow: watchlist-add.yaml
+
+# KBANK card is now visible — TickerCard renders a TouchableOpacity with text "×"
+- tapOn:
+    text: "×"
+
+# KBANK should be gone; empty state renders
+- assertNotVisible:
+    text: "KBANK"
+
+- assertVisible:
+    text: "No tickers on watchlist"
